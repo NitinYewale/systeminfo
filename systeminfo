@@ -1,0 +1,218 @@
+#!/bin/bash
+
+
+###########################################################################################################
+#
+# systeninfo v0.1.0
+# Latest version at <http://github.com/NitinYewale/systeminfo>
+# RPM packages available at - 
+# Nitin U. Yewale <nyewale@redhat.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+#    General Public License <gnu.org/licenses/gpl.html> for more details.
+#
+#
+###########################################################################################################
+                                                                                                          #
+                                                                                                          #
+###########################################################################################################
+#
+#
+# The systeminfo utility displays the system information when run without any options.
+# This utility takes only two arguments which need to be supplied with -d [domain] and -o [option]
+# domain and options arguments are optional.
+# Domain represents the OS component and options is the sub-component.
+# 
+# Usage :
+# systeminfo -d domain    # To see only domain specific system information
+# systeminfo -d domain -o option  
+# To see the information at further granular level, use "-o option". This would also show the OS command that runs in the 
+# background to provide that information.
+# 
+# For example
+# systeminfo   <--- Generic OS information
+# systeminfo -d storage  <-- Generic information about domain "Stoage" in the OS
+# systeminfo -d storage -o lvm    <--- LVM is subcomponent of Storage
+# 
+#
+#############################################################################################################
+
+
+SYSTEMINFO_VERSION="0.1"
+
+# systeminfo version is in the form of X.Y-Z
+# Y represents the number of domains available in systeminfo utility
+
+set -e
+#set -u
+#set -o pipefail
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+if ! [ -f $DIR/lib_systeminfo.sh ]; then
+    DIR="/usr/share/systeminfo-$SYSTEMINFO_VERSION"
+fi
+
+
+source $DIR/lib_systeminfo.sh
+
+# Usage
+usage()
+{
+echo -e "\n${Cyan}Usage : systeminfo${NC} ${Cyan}[-d domain]${NC} ${Cyan}[-o option1,option2..]${NC}"
+echo -e "\n${Cyan}Usage : systeminfo${NC} ${Cyan}[-d domain]${NC} ${Cyan}[-o option=<arg>]${NC}"
+echo -e "\n${Cyan}Usage : systeminfo -s string${NC}    ${Cyan}### To search about \"string\"${NC}"
+echo -e "\n${c[Cyan]}To view the command"
+echo -e "\n${c[Yellow]}Usage : systeminfo -d storage${c[NC]} ${c[Cyan]}[-c option]${c[NC]}"
+
+echo -e "------------------------------------------------------------------- \n"
+
+echo -e "${Cyan}domains :${NC}"
+
+echo -e "\t${Cyan} anaconda | ansible | APImgmt | boom | clusterha | containers | desktop | filesystem | filesystem_network | fusesource \
+| gluster | identitymanagement | insights | jboss | kernel | oracle | pcp | network | networklayer | rdma | services | shift | stack | \
+stratis | storage | tools | udev | veritas | vdo | virt ${NC} \n"
+
+}
+
+
+
+# systeminfo command
+systeminfo ()
+{
+  local _release _loggedin_users
+  _hostname=`hostname`
+  if [ -r /etc/redhat-release ]; then
+    _release=`sed -n '1,2p' /etc/redhat-release |grep -v "^#"`
+  else
+    _release="missing..."
+  fi
+  _kernel_build=`uname -r`
+  if [ -r /proc/cmdline ]; then
+    _cmdline=`sed -n '1,2p' /proc/cmdline`
+  fi
+  _systime=`date`
+  if [ -r /usr/sbin/runlevel ]; then
+    _runlevel=`/usr/sbin/runlevel`
+  fi
+  _uptime=`uptime |cut -d"," -f 1,2`
+  _load_average=`uptime |cut -d "," -f 3,4,5,6`
+  _loggedin_users=`who`
+
+  #echo -e "\n"
+  echo -e "\t${c[Cyan]}Hostname :${c[NC]} ${c[Yellow]}$_hostname${c[NC]}"
+  echo -e "\t${c[Cyan]}SERVER HARDWARE :${c[NC]}"
+  echo -e "\t${c[Cyan]}Distro :${c[NC]} "
+  echo -e "\t\t${c[Cyan]}[os-release] :${c[NC]} ${c[Yellow]}$_release${c[NC]}"
+  echo -e "\t${c[Cyan]}RHN :${c[NC]} "
+  echo -e "\t${c[Cyan]}RHSM :${c[NC]} "
+  echo -e "\t${c[Cyan]}YUM :${c[NC]} "
+  echo -e "\t${c[Cyan]}Runlevel :${c[NC]} ${c[Yellow]}$_runlevel${c[NC]}"
+  echo -e "\t${c[Cyan]}SELinux :${c[NC]} "
+  echo -e "\t${c[Cyan]}Booted Kernel :${c[NC]} ${c[Yellow]}$_kernel_build${c[NC]}"
+  #echo -e "\t${c[Cyan]}Build version :${c[NC]} "
+  echo -e "\t${c[Cyan]}Booted Kernel cmdline :${c[NC]} ${c[Yellow]}$_cmdline${c[NC]}"
+  #echo -e "\n${Yellow}-----------------------------------------------------${NC}\n"
+  echo -e "\t${c[Cyan]}SysTime :${c[NC]} ${c[Yellow]}$_systime${c[NC]}"
+  #echo -e "\t${c[Cyan]}BootTime :${c[NC]} "
+  echo -e "\t${c[Cyan]}TimeZone :${c[NC]} "
+  echo -e "\t${c[Cyan]}Uptime :${c[NC]} ${c[Yellow]}$_uptime${c[NC]}"
+  echo -e "\t${c[Cyan]}LoadAvg :${c[NC]} "
+  echo -e "\t${c[Cyan]}LoggedIn Users :\n${c[NC]} ${c[Yellow]}\t\t$_loggedin_users${c[NC]}"
+  echo -e "\n"
+
+  #TODO 
+  #Shared Filessytems
+
+  exit 0
+}
+
+
+opt1=$1
+if [ "$opt1" = "" ]; then
+  systeminfo
+fi
+
+while getopts 'hvd:o:s:c:' OPTION; do
+  case "$OPTION" in
+    d)
+      _domain="$OPTARG"
+      ;;
+    o)
+      options="$OPTARG"
+      _show_command="0"
+      ;;
+    c)
+      options="$OPTARG"
+      _show_command="1"
+      ;;
+    v)
+      version="$SYSTEMINFO_VERSION"
+      ;;
+    h)
+      if [ $1 = "-h" ]; then
+        usage
+      fi
+      i=2
+      ;;
+    s)
+      option="$OPTARG"
+      string="systeminfo_search.sh"
+      bash $DIR/$string $option
+      ;;
+    ?)
+      echo "script usage: \$systeminfo [-h] [-d domain] [-o option1,option2...]" >&2
+      #echo "script usage: $(basename $0) [-h] [-d domain] [-o option1,option2...]" >&2
+      exit 0
+      ;;
+   esac
+done
+shift "$(($OPTIND -1))"
+
+# This is an array of supported _domains. Need to fill this manually as the domains are added.
+
+_domain_arr=("anaconda ansible APImgmt blocklayer boom clusterha containers database desktop filesystem
+ filesystem_network fusesource gluster identitymanagement insights jboss kernel pcp network
+ networklayer rdma scsilayer services shift stack stratis storage tools udev vdo virt rhev domain_template")
+
+if [ $version ]; then
+  echo -e "${c[Cyan]}Version info: systeminfo v$SYSTEMINFO_VERSION${c[NC]}"
+fi
+
+#systeminfo options
+so=""
+
+if [ $options ]; then
+  if [ "$_show_command" -eq "0" ]; then
+    so="-o"
+  elif [[ "$_show_command" -eq "1" ]]; then
+    so="-c"
+  fi
+fi
+
+# Form the command string
+# string="$_domains -o $options"
+string="$_domain.sh  "$so" $options"
+
+if [ $_domain ]; then
+  if [[ "$_domain_arr" == *"$_domain"* ]]; then
+    if [ "$i" > "1" ]; then
+      sh="-h"
+      bash $DIR/$string "$sh"
+    else
+      bash $DIR/$string
+    fi
+  else
+    echo -e "Invalid domain \"$_domain\" specified."
+    echo -e "help: "
+    echo -e "\t \$systeminfo -h"
+  fi
+else
+  exit 0
+fi
