@@ -1,4 +1,8 @@
 # systeminfo
+
+systeminfo utility simplifies running linux commands and the best part is we do not need to remember the actual commands.
+It is a great tool for learning commands and linux topics as well as it provides a simplified interface for learning commands.
+
 The systeminfo utility displays the system information when run without any options.
 This utility takes only two arguments which need to be supplied with -d [domain] and -o [option]
 domain and options arguments are optional.
@@ -14,7 +18,7 @@ Why we need this utility
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
-- How does it work
+- How does it work / example commands
 
   systeminfo
   systeminfo -d <domain>
