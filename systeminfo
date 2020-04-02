@@ -76,7 +76,7 @@ echo -e "------------------------------------------------------------------- \n"
 echo -e "${Cyan}domains :${NC}"
 
 echo -e "\t${Cyan} anaconda | ansible | APImgmt | boom | clusterha | containers | desktop | filesystem | filesystem_network | fusesource \
-| gluster | identitymanagement | insights | jboss | kernel | oracle | pcp | network | networklayer | rdma | services | shift | stack | \
+| gluster | identitymanagement | insights | jboss | kernel | oracle | pcp | networking | networklayer | rdma | services | shift | stack | \
 stratis | storage | tools | udev | veritas | vdo | virt ${NC} \n"
 
 }
@@ -178,7 +178,7 @@ shift "$(($OPTIND -1))"
 # This is an array of supported _domains. Need to fill this manually as the domains are added.
 
 _domain_arr=("anaconda ansible APImgmt blocklayer boom clusterha containers database desktop filesystem
- filesystem_network fusesource gluster identitymanagement insights jboss kernel pcp network
+ filesystem_network fusesource gluster identitymanagement insights jboss kernel pcp networking
  networklayer rdma scsilayer services shift stack stratis storage tools udev vdo virt rhev domain_template")
 
 if [ $version ]; then
