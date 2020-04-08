@@ -149,18 +149,17 @@ _opt_keys=${_KEYS[@]}
 
 if [ "$options" ]; then
   OPTIONS="$options"
+
   # For commands such as
   # systeminfo -d storage -o scsi_id=/dev/sdc
 
   _splitoption=$(echo $OPTIONS |awk '/=/{print $1}')
 
   if [ $_splitoption ]; then
-    _parameter=$(echo "$OPTIONS" | cut -d"/" -f 1)
-    if [[ "_splitoption" -eq "_parameter" ]]; then
-	    _parameter=$(echo "$OPTIONS" | cut -d"=" -f 1)
-    fi
 
-    #_parameter=$(echo "$OPTIONS" | cut -d"=" -f 1)
+    _temp_parameter=$(echo "$OPTIONS" | cut -d"=" -f 1)
+    _parameter=$_temp_parameter=
+
     _arg=$(echo "$OPTIONS" | cut -d"=" -f 2)
 
     if grep -q "$_parameter" <<< "$_opt_keys"; then
@@ -171,6 +170,7 @@ if [ "$options" ]; then
       echo "help: "
       echo -e "\t \$systeminfo -d <domain> -h"
     fi
+
   else
     # For commands such as
     # systeminfo -d storage -o device-mapper_table
@@ -187,8 +187,9 @@ if [ "$options" ]; then
           echo "help: "
           echo -e "\t \$systeminfo -d <domain> -h"
         fi
-      done
+    done
   fi
+
 else
   # If no options are specified and _-d domain_ is provided, we need to run _domain() and provide some
   # information about the domain
